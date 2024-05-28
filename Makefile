@@ -2,7 +2,10 @@
 CXX = g++
 
 # Compiler flags
-CXXFLAGS = -Wall -Wextra -std=c++11
+CXXFLAGS = -Wall -Wextra -std=c++17
+
+# Linker flags
+LDFLAGS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
 # Directories
 INCDIR = include
@@ -23,7 +26,7 @@ all: $(EXEC)
 
 # Link the object files to create the final executable
 $(EXEC): $(OBJECTS)
-	$(CXX) $(OBJECTS) -o $(EXEC)
+	$(CXX) $(OBJECTS) -o $(EXEC) $(LDFLAGS)
 
 # Compile source files into object files
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)

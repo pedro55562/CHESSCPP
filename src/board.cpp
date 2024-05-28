@@ -250,5 +250,8 @@ int Board::getBoardPosition(const std::string &s){
     return (16*rank + file);
 }
 
-
+Piece Board::getPiece(const int &square)
+{
+    return board[square];
+}
 }

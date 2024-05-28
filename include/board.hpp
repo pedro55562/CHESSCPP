@@ -57,7 +57,19 @@ class Board
 
         int getBoardPosition(const std::string& s);
 
+        Piece getPiece(const int& square);
+        
         void getPseudoLegalMoves();
+
+        std::list<int> getPossibleDestinations(int square){
+            std::list<int> lista;
+            for (int i = 0; i < 128; i++){
+                lista.push_back(i);
+            }
+            
+            
+            return lista;
+        }
 };
 
 }
