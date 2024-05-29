@@ -21,6 +21,8 @@ class Board
 
         // list of pieces positions - you shoud use vector (32 elements)
         std::list<int> pieces;
+        std::list<int> white_pieces;
+        std::list<int> black_pieces;
 
         // keep track of pseudo-legal moves( maybe from - to)
         std::list<Move> pseudolegalMoves;
@@ -59,17 +61,18 @@ class Board
 
         Piece getPiece(const int& square);
         
-        void getPseudoLegalMoves();
+        void generatePseudoLegalMoves();
 
-        std::list<int> getPossibleDestinations(int square){
-            std::list<int> lista;
-            for (int i = 0; i < 128; i++){
-                lista.push_back(i);
-            }
-            
-            
-            return lista;
-        }
+        void get_pseudo_moves(const int &square, std::vector<int> &offsets_, std::list<Move> &targets);
+
+        void getKnightMoves(const int &square, std::vector<int> &offsets_, std::list<Move> &targets);
+
+        void getKingMoves(const int &square, std::vector<int> &offsets_, std::list<Move> &targets);
+
+        void getPawnMoves(const int &square, std::list<Move> &targets);
+
+
+        std::list<int> getPossibleDestinations(int square);
 };
 
 }

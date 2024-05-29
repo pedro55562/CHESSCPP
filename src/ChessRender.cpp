@@ -21,14 +21,14 @@ std::map<int, int> chessToRaylib = {
 };
 
 std::map<int, int> RaylibToChess = {
-    {1, 0},
-    {2, 1},
-    {3, 2},
+    {0, 7},
+    {1, 6},
+    {2, 5},
+    {3, 4},
     {4, 3},
-    {5, 4},
-    {6, 5},
-    {7, 6},
-    {8, 7}
+    {5, 2},
+    {6, 1},
+    {7, 0}
 };
 
 
@@ -94,15 +94,12 @@ void ChessRenderer::renderPiece(const Texture2D& pieceTexture, const int& col, c
 // Renderiza visualmente as posições possíveis para mover uma peça a partir de uma posição específica no tabuleiro de xadrez.
 void ChessRenderer::renderPossibleDestinations(const int &from) const
 {
-    // Obtém a lista de destinos possíveis para a peça na posição 'from' no tabuleiro
     list<int> lista_ = board.getPossibleDestinations(from);
-    // Itera sobre cada posição na lista de destinos possíveis
     for (auto square : lista_) {
-        // Desenha um retângulo vermelho na tela para destacar a posição possível
-        // A função DrawRectangle desenha um retângulo na posição especificada com largura e altura 'squaresize' e cor 'red_'
-        int row = square >> 4;
-        int col = square & 7;
-        DrawRectangle(col * squaresize, row * squaresize, squaresize, squaresize, red_);
+        int ranks = chessToRaylib[square >> 4];
+        int files = square & 7;
+        DrawRectangle(files * squaresize, ranks * squaresize, squaresize, squaresize, red_);
+
     }
 }
 
@@ -212,13 +209,8 @@ int ChessRenderer::handleMouseInput()
     {
         int X_pos = GetMouseX();
         int Y_pos = GetMouseY();
-    
-    //Converte de pixels para coordenadas do tabuleiro
-        int files = X_pos / squaresize;
-        int ranks = Y_pos / squaresize;
-        aux = ranks*16 + files;
-        click = true; // Marca que um clique ocorreu
-        return aux;   // Retorna a posição do clique do mouse
+        click = true;
+        return RaylibToChess[Y_pos / squaresize]*16 + X_pos/squaresize;   // Retorna a posição do clique do mouse
     }
   }
 

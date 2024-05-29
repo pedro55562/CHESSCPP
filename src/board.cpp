@@ -38,6 +38,9 @@ std::vector<int> rook_offsets = {1,16,-1,-16};
 std::vector<int> king_offsets = {1,16,-1,-16, 15, 17, -15, -17};
 std::vector<int> queen_offsets = {1,16,-1,-16, 15, 17, -15, -17};
 
+std::vector<int> white_pawn_offsets = {16,17,15};
+std::vector<int> black_pawn_offsets = {-16,-17,-15};
+
 
 std::map<char, int> SymbolToType = {
     {'k', KING},
@@ -217,6 +220,7 @@ void Board::SetFen(const std::string &fen)
                 int pieceType = SymbolToType[ tolower(symbol) ];
                 this->board[16*rank + file] =  Piece(pieceType, piececolor);
                 pieces.push_back(16*rank + file);
+                (piececolor == WHITEn) ? white_pieces.push_back(16*rank + file) : black_pieces.push_back(16*rank + file);
                 file++;
             }
 
@@ -254,4 +258,160 @@ Piece Board::getPiece(const int &square)
 {
     return board[square];
 }
+
+void Board::generatePseudoLegalMoves(){
+    
+    std::list<int>& currpieces = (iswhitetomove) ? white_pieces : black_pieces;
+    for(int square : currpieces){
+        switch (board[square].getType())
+        {
+        case QUEEN:
+            std::cout << "\n\nQUEEN at square: " << square << "\n\n";
+            get_pseudo_moves(square, queen_offsets ,pseudolegalMoves);
+            continue;
+
+        case ROOK:
+            std::cout << "\n\nROOK at square: " << square << "\n\n";
+            get_pseudo_moves(square, rook_offsets ,pseudolegalMoves);
+            continue;
+
+        case BISHOP:
+            std::cout << "\n\nBISHOP at square: " << square << "\n\n";
+            get_pseudo_moves(square, bishop_offsets ,pseudolegalMoves);
+            continue;
+
+        case KNIGHT: //bugado
+            std::cout << "\n\nKNIGHT at square: " << square << "\n\n";
+            getKnightMoves(square, knight_offsets ,pseudolegalMoves);
+            continue; 
+
+        case KING: //bugaod
+            std::cout << "\n\nKING at square: " << square << "\n\n";
+            getKingMoves(square, king_offsets ,pseudolegalMoves);
+            continue; 
+
+        case PAWN:
+            getPawnMoves(square, pseudolegalMoves);
+            continue; 
+
+        default:
+            continue;
+        }
+
+    }
+}
+
+// for sliding pieces
+void Board::get_pseudo_moves(const int &square, std::vector<int> &offsets_, std::list<Move> &targets){
+    int fromcolor = board[square].getColor();
+
+    for (int offsets : offsets_){
+        int currsquare = square;
+        int i = 1;
+        while (1)
+        {
+            int currsquare = (square + offsets*i);
+            if(( currsquare & 0x88)){ // if it's out of the board
+                break;
+            }
+
+            if ( board[currsquare].isEmpty() ){ // if it's empty
+                targets.push_back(Move(square, currsquare,EMPTY,false,false,false,false));
+                i++;
+                std::cout << "" << currsquare << "\n";
+                continue;
+            }
+            if ( board[currsquare].getColor() == fromcolor ){ // if it's a friendly piece
+                i++;
+                break;
+            }
+            if (board[currsquare].getColor() != fromcolor){ // if it's enemy piece
+                std::cout << "" << currsquare << "\n";
+                targets.push_back(Move(square, currsquare,EMPTY,true,false,false,false));
+                i++;
+                break;
+            }
+            i++;
+        }      
+    }
+}
+
+void Board::getKnightMoves(const int &square, std::vector<int> &offsets_, std::list<Move> &targets){
+    int fromcolor = board[square].getColor();
+    for (int offsets : offsets_){
+        int currsquare = (square + offsets);
+        if(( currsquare & 0x88)){ // if it's out of the board
+            continue;;
+        }
+
+        if ( board[currsquare].isEmpty() ){ // if it's empty
+            targets.push_back(Move(square, currsquare,EMPTY,false,false,false,false));
+            continue;
+        }
+        if (board[currsquare].getColor() != fromcolor){ // if it's enemy piece
+            targets.push_back(Move(square, currsquare,EMPTY,true,false,false,false));
+            continue;
+        }              
+    }
+}
+
+void Board::getKingMoves(const int &square, std::vector<int> &offsets_, std::list<Move> &targets){
+    // TODO: castling
+    int fromcolor = board[square].getColor();
+    for (int offsets : offsets_){
+        int currsquare = (square + offsets);
+        if(( currsquare & 0x88)){ // if it's out of the board
+            continue;;
+        }
+
+        if ( board[currsquare].isEmpty() ){ // if it's empty
+            targets.push_back(Move(square, currsquare,EMPTY,false,false,false,false));
+            continue;
+        }
+        if (board[currsquare].getColor() != fromcolor){ // if it's enemy piece
+            targets.push_back(Move(square, currsquare,EMPTY,true,false,false,false));
+            continue;
+        }              
+    }
+}
+
+void Board::getPawnMoves(const int &square, std::list<Move> &targets){
+    int fromcolor = board[square].getColor();
+    
+    // TODO : enppassant e otimizar logica(se possivel - acho que sim)
+
+    std::vector<int>& offsets_ = (iswhitetomove) ? white_pawn_offsets : black_pawn_offsets;
+
+    for (int offsets : offsets_){ 
+        int currsquare = (square + offsets);
+        if(( currsquare & 0x88)){ // if it's out of the board
+            continue;
+        }
+        if ( board[currsquare].isEmpty() && offsets == offsets_[0] ){ // if it's empty
+            targets.push_back(Move(square, currsquare,EMPTY,false,false,false,false));
+            if (((square>>4) == 1)|| ((square>>4) == 6)){ //first white pawn move
+                currsquare = square + 2 * offsets;
+                if ( board[currsquare].isEmpty() ){
+                    targets.push_back(Move(square, currsquare,EMPTY,false,true,false,false));  
+                    continue;  
+                }
+            } //pawn move capture
+        }
+        if((board[currsquare].isEmpty() == false ) && (board[currsquare].getColor()!=fromcolor) && ((offsets==offsets_[1])||(offsets==offsets_[2]))){
+            targets.push_back(Move(square, currsquare,EMPTY,false,true,false,false));    
+        } 
+    }
+}
+
+std::list<int> Board::getPossibleDestinations(int square){
+    std::list<int> lista; 
+    for(Move m : pseudolegalMoves){
+        if ( m.getStart() == square){
+            lista.push_back(m.getTarget());
+        }
+    }         
+    
+    return lista;
+}
+
 }

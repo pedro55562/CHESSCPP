@@ -12,9 +12,9 @@
 
 int main() {
     chess::Board game;
-    game.SetFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -");
+    game.SetFen("rnbqkbnr/ppp1pppp/5P2/8/8/3p4/PPPPP1PP/RNBQKBNR b KQkq - 0 1");
     game.printBoard();  
-
+    game.generatePseudoLegalMoves();
     chess::ChessRenderer graphic(game);
 
     while (!graphic.shouldClose())
