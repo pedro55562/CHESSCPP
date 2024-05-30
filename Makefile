@@ -4,6 +4,9 @@ CXX = g++
 # Compiler flags
 CXXFLAGS = -Wall -Wextra -std=c++17
 
+# Debug flags
+DEBUG_FLAGS = -g
+
 # Linker flags
 LDFLAGS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
@@ -23,6 +26,10 @@ EXEC = main
 
 # Default target
 all: $(EXEC)
+
+# Debug target
+debug: CXXFLAGS += $(DEBUG_FLAGS)
+debug: clean $(EXEC)
 
 # Link the object files to create the final executable
 $(EXEC): $(OBJECTS)
@@ -45,4 +52,4 @@ clean:
 	rm -rf $(OBJDIR) $(EXEC)
 
 # Phony targets
-.PHONY: all clean
+.PHONY: all clean debug

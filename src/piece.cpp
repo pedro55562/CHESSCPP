@@ -2,7 +2,11 @@
 #include "constants.hpp"
 
 namespace chess
-{  
+{
+    Piece::operator int()
+    {
+        return piece;
+    }
 
 Piece::Piece(const int &type, const int &color){
     this->piece = type | color;

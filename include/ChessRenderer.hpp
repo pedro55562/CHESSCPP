@@ -79,6 +79,8 @@ private:
      */
     void renderPossibleDestinations(const int& from) const;
 
+    void renderPiecesSquares() const;
+
 public:
     /**
      * @brief Construtor da classe ChessRenderer.

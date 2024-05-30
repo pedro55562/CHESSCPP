@@ -103,6 +103,21 @@ void ChessRenderer::renderPossibleDestinations(const int &from) const
     }
 }
 
+void ChessRenderer::renderPiecesSquares() const{
+    list<int> lista_ = board.getWhitePiecesSquares();
+    for (auto square : lista_) {
+        int ranks = chessToRaylib[square >> 4];
+        int files = square & 7;
+        DrawRectangle(files * squaresize, ranks * squaresize, squaresize, squaresize, BLUE);
+    }
+    lista_ = board.getBlackPiecesSquares();
+    for (auto square : lista_) {
+        int ranks = chessToRaylib[square >> 4];
+        int files = square & 7;
+        DrawRectangle(files * squaresize, ranks * squaresize, squaresize, squaresize, GREEN);
+    }    
+}
+
 // Função principal de renderização do jogo
 void ChessRenderer::render()
 {
@@ -118,7 +133,6 @@ void ChessRenderer::render()
       renderBoard(row, col); // Chama a função para renderizar as posições possíveis para a peça selecionada
     }
   }
-
   // Destaca as posições possíveis se uma peça estiver selecionada
   for (int row = 0; row < size; row++)
   {
@@ -129,13 +143,11 @@ void ChessRenderer::render()
       }    
     }
   }
-
   // Renderiza as peças no tabuleiro
   for (int square = 0; square < 128; square++)
   { 
       int row = chessToRaylib[square >> 4];
       int col = square & 7;
-
 
       // Verifica o tipo e a cor da peça e renderiza a textura correspondente
       switch (board.getPiece(square).getCode())
@@ -211,6 +223,9 @@ int ChessRenderer::handleMouseInput()
         int Y_pos = GetMouseY();
         click = true;
         return RaylibToChess[Y_pos / squaresize]*16 + X_pos/squaresize;   // Retorna a posição do clique do mouse
+    }
+    if(IsKeyPressed(KEY_Z) && !isPieceSelected){
+      return -2;
     }
   }
 

@@ -31,6 +31,9 @@ class Piece{
 
 
     public:
+
+        operator int();
+
         Piece(const int& type, const int& color);
 
         Piece();
