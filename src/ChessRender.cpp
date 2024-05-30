@@ -200,7 +200,7 @@ int ChessRenderer::handleMouseInput()
   {
     if (shouldClose() == true)
     {
-      break;
+      return -1;
     }
     render(); // Renderiza o jogo enquanto espera pelo click do jogador
 

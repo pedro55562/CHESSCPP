@@ -300,10 +300,7 @@ void Board::printBoard()
             if (!file){
                 std::cout << rowsTOranks[rank] << "  ";
             }
-            if (isSquareUnderAttack(rank * 16 + file)){
-                std::cout << "x" << " ";
-                continue;
-            }
+
             std::cout << pieceToChar[this->board[rank * 16 + file].getCode()]<< " ";
         }      
         std::cout << "\n";  
@@ -315,18 +312,18 @@ void Board::printBoard()
     std::cout << "\n\n";
 
     std::cout << "Is white to move? "<< this->iswhitetomove << "\n";
-    std::cout << "Castlings Rights:\n";
+    std::cout << "\nCastlings Rights:\n";
     std::cout << "\nFor white pieces:\n";
     std::cout << "King side: " << this->whiteKingside << "\n";
     std::cout << "Queen side: " << this->whiteQueenside << "\n";
-    std::cout << "\nFor white pieces:\n";
+    std::cout << "\nFor black pieces:\n";
     std::cout << "King side: " << this->blackKingside << "\n";
     std::cout << "Queen side: " << this->blackQueenside << "\n";
     
     //enpassant target square
     if( enpassantSquare != -1){
-        std::cout << "\nEnpassant position: "<< colsTOfiles[enpassantSquare & 7] << rowsTOranks[enpassantSquare >> 4] << "\n";
-        std::cout << "Enpassant squre: " << enpassantSquare << "\n";
+        std::cout << "\n\nEnpassant position: "<< colsTOfiles[enpassantSquare & 7] << rowsTOranks[enpassantSquare >> 4] << "\n";
+        std::cout << "Enpassant square: " << enpassantSquare << "\n";
 
     }
 }
@@ -369,6 +366,8 @@ void Board::SetFen(const std::string &fen)
     // enpassant targetsquare 
     if ( sections[3] != "-"){
         enpassantSquare = getBoardPosition(sections[3]);
+    }else{
+        enpassantSquare = -1;
     }
 }
 
@@ -385,5 +384,251 @@ int Board::getBoardPosition(const std::string &s){
     return (16*rank + file);
 }
 
+void Board::pseudoMoveGenerator(){
+    std::list<int>& myPieces = (iswhitetomove) ? white_pieces : black_pieces;
 
+    for(int square : myPieces){
+        Piece piece = board[square];
+        //Pawn moves
+        if(piece.isType(PAWN)){
+            int promoted_rank = iswhitetomove ? 7 : 0;
+            int double_push_rank = iswhitetomove ? 1 : 6;
+            int push_offset = (iswhitetomove) ? 16: -16;
+            std::vector<int> capture_offsets = (iswhitetomove) ? std::vector<int>{17, 15} : std::vector<int>{-17, -15};
+
+            //quite moves - pawn promotions - double pawn push
+            if(!((square+push_offset) & 0x88)){// if it's on the board
+                if (board[square+push_offset].isEmpty()){ 
+                    //normal pawn move
+                    pseudolegalMoves.push_back(Move(square,square+push_offset,EMPTY,false,false,false,false));
+
+                    //pawn promotion
+                    if (((square+push_offset)>>4) == promoted_rank){
+                        pseudolegalMoves.push_back(Move(square,square+push_offset,QUEEN,false,false,false,false));
+                        pseudolegalMoves.push_back(Move(square,square+push_offset,KNIGHT,false,false,false,false));
+                        pseudolegalMoves.push_back(Move(square,square+push_offset,BISHOP,false,false,false,false));
+                        pseudolegalMoves.push_back(Move(square,square+push_offset,ROOK,false,false,false,false));
+                    }
+                    //double push
+                    else if(board[square+2*push_offset].isEmpty() && ((square>>4) == double_push_rank)){
+                        pseudolegalMoves.push_back(Move(square,square+2*push_offset,EMPTY,false,true,false,false)); 
+                    }
+                }
+            }
+            //capture moves - pawn promotion
+            for(int offset : capture_offsets){
+                if(!((square+offset) & 0x88)){
+                    if( (!board[square+offset].isEmpty()) && (!board[square+offset].isColor(board[square].getColor()))){
+                        if( ((square+offset)>>4) == promoted_rank ){
+                            pseudolegalMoves.push_back(Move(square,square+offset,QUEEN ,true,false,false,false));
+                            pseudolegalMoves.push_back(Move(square,square+offset,KNIGHT,true,false,false,false));
+                            pseudolegalMoves.push_back(Move(square,square+offset,BISHOP,true,false,false,false));
+                            pseudolegalMoves.push_back(Move(square,square+offset,ROOK  ,true,false,false,false));                           
+                        }else{
+                            pseudolegalMoves.push_back(Move(square,square+offset,EMPTY,false,false,false,false));
+                        }
+                    }
+                }
+            }
+            //enpassant captures
+            if (enpassantSquare != -1){
+                int offset = square - enpassantSquare;
+                if(abs(offset) == 17 || abs(offset) == 15){
+                    int enemy_piece_pos =enpassantSquare + ((iswhitetomove)? -16 : 16);
+                    if(!((enpassantSquare+offset) & 0x88)){
+                        if( (!board[enemy_piece_pos].isEmpty()) && (!board[enemy_piece_pos].isColor(board[square].getColor())) && ((enpassantSquare+offset) == square)){
+                            pseudolegalMoves.push_back(Move(square,enpassantSquare,EMPTY,false,false,true,false));
+                        }
+                    }
+                }
+            }
+        }
+
+        //Leaper piece moves
+        //Knight:
+        if(piece.isType(KNIGHT)){
+            for(int offset : knight_offsets){
+                if(!((square+offset) & 0x88)){
+                    if(board[square+offset].isEmpty()){
+                        pseudolegalMoves.push_back(Move(square,square+offset,EMPTY,false,false,false,false));
+                    }
+                    if (!board[square+offset].isColor(board[square].getColor()) ){
+                        pseudolegalMoves.push_back(Move(square,square+offset,EMPTY,true,false,false,false));
+                    }
+                }
+            }
+        }
+        //KING:
+        if(piece.isType(KING)){
+            for(int offset : king_offsets){
+                if(!((square+offset) & 0x88)){
+                    if(board[square+offset].isEmpty()){
+                        pseudolegalMoves.push_back(Move(square,square+offset,EMPTY,false,false,false,false));
+                    }
+                    if (!board[square+offset].isColor(board[square].getColor()) ){
+                        pseudolegalMoves.push_back(Move(square,square+offset,EMPTY,true,false,false,false));
+                    }
+                }
+            }
+            //Castling:
+            int kingsquare = (iswhitetomove) ? 4: 116;
+            bool kingside   = (iswhitetomove) ? whiteKingside  : blackKingside;
+            bool queenside  = (iswhitetomove) ? whiteQueenside : blackQueenside;
+            // if it's king side:
+            if(queenside){
+                if(board[kingsquare+1].isEmpty() && board[kingsquare+2].isEmpty()){
+                    if((!isSquareUnderAttack(kingsquare+1)) && (!isSquareUnderAttack(kingsquare+2))){
+                        pseudolegalMoves.push_back(Move(kingsquare,kingsquare+2,false,false,false,false,true));
+                    }
+                }
+            }
+            // if it's queen side:
+            if(kingside){
+                if(board[kingsquare-1].isEmpty() && board[kingsquare-2].isEmpty() && board[kingsquare-3].isEmpty()){
+                    if((!isSquareUnderAttack(kingsquare-1)) && (!isSquareUnderAttack(kingsquare-2))){
+                        pseudolegalMoves.push_back(Move(kingsquare,kingsquare-2,false,false,false,false,true));
+                    }
+                }
+            }
+
+        }
+        //Slider pieces moves - Rooks, bishops, queens
+        //Rooks:
+        if(piece.isType(ROOK)){
+            for(int offset : rook_offsets){
+                int target = square+offset;
+                while(!(target&0x88)){
+                    if(!board[target].isEmpty()){
+                        //enemypiece:
+                        if(!board[target].isColor(piece.getColor())){
+                            pseudolegalMoves.push_back(Move(square,target,EMPTY,true,false,false,false));
+                            break;
+                        //friendly piece
+                        }
+                        break;
+                    }else{//empty
+                        pseudolegalMoves.push_back(Move(square,target,EMPTY,false,false,false,false));
+                        target+=offset;
+                        continue;
+                    }
+                    
+                }
+            }
+        }
+
+        //Bishops:
+        if(piece.isType(BISHOP)){
+            for(int offset : bishop_offsets){
+                int target = square+offset;
+                while(!(target&0x88)){
+                    if(!board[target].isEmpty()){
+                        //enemypiece:
+                        if(!board[target].isColor(piece.getColor())){
+                            pseudolegalMoves.push_back(Move(square,target,EMPTY,true,false,false,false));
+                            break;
+                        //friendly piece
+                        }
+                        break;
+                    }else{//empty
+                        pseudolegalMoves.push_back(Move(square,target,EMPTY,false,false,false,false));
+                        target+=offset;
+                        continue;
+                    }
+                    
+                }
+            }
+        }
+    
+        if(piece.isType(QUEEN)){
+            for(int offset : queen_offsets){
+                int target = square+offset;
+                while(!(target&0x88)){
+                    if(!board[target].isEmpty()){
+                        //enemypiece:
+                        if(!board[target].isColor(piece.getColor())){
+                            pseudolegalMoves.push_back(Move(square,target,EMPTY,true,false,false,false));
+                            break;
+                        //friendly piece
+                        }
+                        break;
+                    }else{//empty
+                        pseudolegalMoves.push_back(Move(square,target,EMPTY,false,false,false,false));
+                        target+=offset;
+                        continue;
+                    }
+                    
+                }
+            }
+        }
+    }
+}
+
+void Board::getLegalMoves(){
+    //por agora:
+    legalMoves = pseudolegalMoves;
+}
+
+void Board::makeMove(Move m){
+    int piece_color = board[m.getTarget()].getColor();
+
+    //making the move:
+    board[m.getTarget()] = board[m.getStart()];
+    board[m.getStart()] = Piece();
+
+    //if the piece is a king
+    if(board[m.getTarget()].isType(KING)){
+        if (piece_color == WHITEn){
+            whiteking = m.getStart();
+        }else{
+            blacking = m.getTarget();
+        }
+    }
+
+
+    enpassantSquare = -1;
+    //if it's double pawn push
+    if(m.getDoublePawnPush()){
+        enpassantSquare = m.getStart() + ((iswhitetomove) ? 16 : -16 );
+    }
+
+    //if it's castling
+
+    //if it's enpassant
+
+    //dar update em lista de pieces
+    std::list<int>& mypieces = (iswhitetomove) ? white_pieces : black_pieces;
+    for(int& i : mypieces){
+        if(i == m.getStart()){
+            i = m.getTarget();
+        }
+    }
+    //if it's capture
+    if(m.getCapture()){
+        std::list<int>& enemy = (!iswhitetomove) ? white_pieces : black_pieces;
+        for(std::list<int>::iterator it = enemy.begin(); it != enemy.end(); ++it){ // removendo da lista e indo do comeco
+            if(*it == m.getTarget()){
+                enemy.erase(it);
+                break;
+            }
+        }
+    }
+}
+
+void Board::movePiece(int start, int target){
+    for(Move m : legalMoves){
+        if(m.getStart() == start && m.getTarget() == target){
+            if(m.getPromotedPiece() == EMPTY){
+                makeMove(m);
+                return;
+            }   
+            if (m.getPromotedPiece() == QUEEN){
+                makeMove(m);
+                return;
+            }else{
+                continue;
+            }
+        }
+    }
+    return;
+}
 }

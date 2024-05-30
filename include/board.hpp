@@ -30,6 +30,10 @@ class Board
         // keep track of legal moves
         std::list<Move> legalMoves;
 
+        //king square
+        int whiteking;
+        int blacking;
+
         // castlings rights
         bool whiteKingside;
         bool whiteQueenside;
@@ -59,14 +63,27 @@ class Board
 
         int getBoardPosition(const std::string& s);
 
+        void pseudoMoveGenerator();
+
         Piece getPiece(const int& square){
             return this->board[square];
         }
 
         std::list<int> getPossibleDestinations(int square){ 
-            std::list<int> EMPTY;
-            return EMPTY;
+            std::list<int> temp;
+            for( Move m : pseudolegalMoves){
+                if (m.getStart() == square){
+                    temp.push_back(m.getTarget());
+                }
+            }
+            return temp;
         }
+
+        void getLegalMoves();
+
+        void movePiece(int start, int target);
+
+        void makeMove(Move m);
 };
 
 }

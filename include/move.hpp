@@ -4,6 +4,10 @@
 
 #include <cstdint>
 
+//talvez:
+// TODO: adicionar opção de peça capturada(tipo e cor)
+// TODO: adicionar opção de cor da peça movida
+
 /*
     Enconding moves into a 32 integer:
 
@@ -16,7 +20,7 @@
     -> double pown push     0000 1000 0000 0000 0000 0000 = 0x080000 << 19
     -> enpassant flag       0001 0000 0000 0000 0000 0000 = 0x100000 << 20
     -> castling             0010 0000 0000 0000 0000 0000 = 0x200000 << 21
-
+    
 
     Promoted piece encoding:
     0b0000 - 0  none-promotion
