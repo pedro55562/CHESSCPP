@@ -22,6 +22,11 @@ Piece::~Piece()
 {
 }
 
+bool Piece::isPiece(int piece)
+{
+    return this->piece == piece;
+}
+
 bool Piece::isEmpty()
 {
     return !piece;

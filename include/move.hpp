@@ -43,19 +43,19 @@ public:
     
     ~Move();
 
-    int getStart();
+    int getStart() const;
 
-    int getTarget();
+    int getTarget() const;
 
-    int getPromotedPiece();
+    int getPromotedPiece() const;
 
-    bool getCapture();
+    bool getCapture() const;
 
-    bool getDoublePawnPush();
+    bool getDoublePawnPush() const;
 
-    bool getEnpassant();
+    bool getEnpassant() const;
 
-    bool getCastling();
+    bool getCastling() const;
 };
 
 }

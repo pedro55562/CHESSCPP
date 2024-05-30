@@ -4,7 +4,7 @@ namespace chess
 { 
 
 Move::Move(int source, int target, int promotedPiece, bool capture, bool doublePawnPush, bool enpassant, bool castling)
-{
+{   
     move = (source)|                // Source square
         ((target << 7))|            // Target square
         ((promotedPiece << 14))|    // Promoted piece
@@ -18,37 +18,37 @@ Move::~Move()
 {
 }
 
-int Move::getStart()
+int Move::getStart() const
 {
     return move & 0x00007F;
 }
 
-int Move::getTarget()
+int Move::getTarget() const
 {
     return (move & 0x003F80)>>7;
 }
 
-int Move::getPromotedPiece()
+int Move::getPromotedPiece() const
 {
     return (move & 0x03C000)>>14;
 }
 
-bool Move::getCapture()
+bool Move::getCapture() const
 {
     return move & 0x040000;
 }
 
-bool Move::getDoublePawnPush()
+bool Move::getDoublePawnPush() const
 {
     return move & 0x080000;
 }
 
-bool Move::getEnpassant()
+bool Move::getEnpassant() const
 {
     return move & 0x100000;
 }
 
-bool Move::getCastling()
+bool Move::getCastling() const
 {
     return move & 0x200000;
 }

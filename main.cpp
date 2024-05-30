@@ -7,25 +7,12 @@
 #include "piece.hpp"
 #include "board.hpp"
 #include "constants.hpp"
-#include "ChessRenderer.hpp"
-
+#include "move.hpp"
 
 int main() {
     chess::Board game;
-    game.SetFen("rnbqkbnr/ppp1pppp/5P2/8/8/3p4/PPPPP1PP/RNBQKBNR b KQkq - 0 1");
+    game.SetFen("8/8/8/8/3Q4/8/8/8 b - - 0 1");
     game.printBoard();  
-    game.generatePseudoLegalMoves();
-    chess::ChessRenderer graphic(game);
-
-    while (!graphic.shouldClose())
-    {
-        graphic.render();
-        int s = graphic.handleMouseInput();
-        graphic.updateSelectedPiece(s);
-    }
-    
-
-    std::cout << sizeof(chess::Piece) << "\n";
-
+    game.printSquaresUnderAttack();
     return 0;
 }

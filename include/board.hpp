@@ -45,9 +45,9 @@ class Board
 
     public:
 
-        bool isSquareUnderAttack(const int square, const bool iswhiteside);
+        bool isSquareUnderAttack(const int square);
 
-        void printSquaresUnderAttack(const bool iswhiteside);
+        void printSquaresUnderAttack();
 
         Board();
 
@@ -59,20 +59,14 @@ class Board
 
         int getBoardPosition(const std::string& s);
 
-        Piece getPiece(const int& square);
-        
-        void generatePseudoLegalMoves();
+        Piece getPiece(const int& square){
+            return this->board[square];
+        }
 
-        void get_pseudo_moves(const int &square, std::vector<int> &offsets_, std::list<Move> &targets);
-
-        void getKnightMoves(const int &square, std::vector<int> &offsets_, std::list<Move> &targets);
-
-        void getKingMoves(const int &square, std::vector<int> &offsets_, std::list<Move> &targets);
-
-        void getPawnMoves(const int &square, std::list<Move> &targets);
-
-
-        std::list<int> getPossibleDestinations(int square);
+        std::list<int> getPossibleDestinations(int square){ 
+            std::list<int> EMPTY;
+            return EMPTY;
+        }
 };
 
 }
