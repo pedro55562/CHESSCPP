@@ -13,7 +13,7 @@
 void teste(){
     std::string defaultFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     chess::Board board;
-    board.SetFen(defaultFen);
+    board.SetFen("r3k2r/8/6P1/8/8/1p6/8/R3K2R w KQkq - 0 1");
     board.getLegalMoves();
 
     chess::ChessRenderer grapghicboard = chess::ChessRenderer(board);

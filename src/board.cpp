@@ -398,19 +398,18 @@ std::list<Move> Board::pseudoMoveGenerator(){
             //quite moves - pawn promotions - double pawn push
             if(!((square+push_offset) & 0x88)){// if it's on the board
                 if (board[square+push_offset].isEmpty()){ 
-                    //normal pawn move
-                    pseudolegalMoves.push_back(Move(square,square+push_offset,EMPTY,false,false,false,false));
-
                     //pawn promotion
-                    if (((square+push_offset)>>4) == promoted_rank){
-                        pseudolegalMoves.push_back(Move(square,square+push_offset,QUEEN,false,false,false,false));
-                        pseudolegalMoves.push_back(Move(square,square+push_offset,KNIGHT,false,false,false,false));
-                        pseudolegalMoves.push_back(Move(square,square+push_offset,BISHOP,false,false,false,false));
-                        pseudolegalMoves.push_back(Move(square,square+push_offset,ROOK,false,false,false,false));
+                    if( ((square+push_offset)>>4) == promoted_rank ){
+                        pseudolegalMoves.push_back(Move(square,square+push_offset,QUEEN ,board[square+push_offset].getType(),false,false,false));
+                        pseudolegalMoves.push_back(Move(square,square+push_offset,KNIGHT,board[square+push_offset].getType(),false,false,false));
+                        pseudolegalMoves.push_back(Move(square,square+push_offset,BISHOP,board[square+push_offset].getType(),false,false,false));
+                        pseudolegalMoves.push_back(Move(square,square+push_offset,ROOK  ,board[square+push_offset].getType(),false,false,false));                           
+                    }else{ //normal pawn move
+                        pseudolegalMoves.push_back(Move(square,square+push_offset,EMPTY,board[square+push_offset].getType(),false,false,false));                        
                     }
                     //double push
-                    else if(board[square+2*push_offset].isEmpty() && ((square>>4) == double_push_rank)){
-                        pseudolegalMoves.push_back(Move(square,square+2*push_offset,EMPTY,false,true,false,false)); 
+                    if(board[square+2*push_offset].isEmpty() && ((square>>4) == double_push_rank)){
+                        pseudolegalMoves.push_back(Move(square,square+2*push_offset,EMPTY,board[square+2*push_offset].getType(),true,false,false)); 
                     }
                 }
             }
@@ -419,24 +418,24 @@ std::list<Move> Board::pseudoMoveGenerator(){
                 if(!((square+offset) & 0x88)){
                     if( (!board[square+offset].isEmpty()) && (!board[square+offset].isColor(board[square].getColor()))){
                         if( ((square+offset)>>4) == promoted_rank ){
-                            pseudolegalMoves.push_back(Move(square,square+offset,QUEEN ,true,false,false,false));
-                            pseudolegalMoves.push_back(Move(square,square+offset,KNIGHT,true,false,false,false));
-                            pseudolegalMoves.push_back(Move(square,square+offset,BISHOP,true,false,false,false));
-                            pseudolegalMoves.push_back(Move(square,square+offset,ROOK  ,true,false,false,false));                           
+                            pseudolegalMoves.push_back(Move(square,square+offset,QUEEN ,board[square+offset].getType(),false,false,false));
+                            pseudolegalMoves.push_back(Move(square,square+offset,KNIGHT,board[square+offset].getType(),false,false,false));
+                            pseudolegalMoves.push_back(Move(square,square+offset,BISHOP,board[square+offset].getType(),false,false,false));
+                            pseudolegalMoves.push_back(Move(square,square+offset,ROOK  ,board[square+offset].getType(),false,false,false));                           
                         }else{
-                            pseudolegalMoves.push_back(Move(square,square+offset,EMPTY,false,false,false,false));
+                            pseudolegalMoves.push_back(Move(square,square+offset,EMPTY ,board[square+offset].getType(),false,false,false));
                         }
                     }
                 }
             }
             //enpassant captures
-            if (enpassantSquare != -1){
+            if ((enpassantSquare != -1) && board[enpassantSquare].isEmpty()){
                 int offset = square - enpassantSquare;
                 if(abs(offset) == 17 || abs(offset) == 15){
                     int enemy_piece_pos =enpassantSquare + ((iswhitetomove)? -16 : 16);
                     if(!((enpassantSquare+offset) & 0x88)){
                         if( (!board[enemy_piece_pos].isEmpty()) && (!board[enemy_piece_pos].isColor(board[square].getColor())) && ((enpassantSquare+offset) == square)){
-                            pseudolegalMoves.push_back(Move(square,enpassantSquare,EMPTY,false,false,true,false));
+                            pseudolegalMoves.push_back(Move(square,enpassantSquare,EMPTY,EMPTY,false,true,false));
                         }
                     }
                 }
@@ -449,10 +448,10 @@ std::list<Move> Board::pseudoMoveGenerator(){
             for(int offset : knight_offsets){
                 if(!((square+offset) & 0x88)){
                     if(board[square+offset].isEmpty()){
-                        pseudolegalMoves.push_back(Move(square,square+offset,EMPTY,false,false,false,false));
+                        pseudolegalMoves.push_back(Move(square,square+offset,EMPTY,board[square+offset].getType(),false,false,false));
                     }
                     if (!board[square+offset].isColor(board[square].getColor()) ){
-                        pseudolegalMoves.push_back(Move(square,square+offset,EMPTY,true,false,false,false));
+                        pseudolegalMoves.push_back(Move(square,square+offset,EMPTY,board[square+offset].getType(),false,false,false));
                     }
                 }
             }
@@ -462,10 +461,10 @@ std::list<Move> Board::pseudoMoveGenerator(){
             for(int offset : king_offsets){
                 if(!((square+offset) & 0x88)){
                     if(board[square+offset].isEmpty()){
-                        pseudolegalMoves.push_back(Move(square,square+offset,EMPTY,false,false,false,false));
+                        pseudolegalMoves.push_back(Move(square,square+offset,EMPTY,board[square+offset].getType(),false,false,false));
                     }
                     if (!board[square+offset].isColor(board[square].getColor()) ){
-                        pseudolegalMoves.push_back(Move(square,square+offset,EMPTY,true,false,false,false));
+                        pseudolegalMoves.push_back(Move(square,square+offset,EMPTY,board[square+offset].getType(),false,false,false));
                     }
                 }
             }
@@ -477,7 +476,7 @@ std::list<Move> Board::pseudoMoveGenerator(){
             if(kingside){
                 if(board[kingsquare+1].isEmpty() && board[kingsquare+2].isEmpty()){
                     if((!isSquareUnderAttack(kingsquare+1)) && (!isSquareUnderAttack(kingsquare+2))){
-                        pseudolegalMoves.push_back(Move(kingsquare,kingsquare+2,false,false,false,false,true));
+                        pseudolegalMoves.push_back(Move(kingsquare,kingsquare+2,EMPTY,EMPTY,false,false,true));
                     }
                 }
             }
@@ -485,7 +484,7 @@ std::list<Move> Board::pseudoMoveGenerator(){
             if(queenside){
                 if(board[kingsquare-1].isEmpty() && board[kingsquare-2].isEmpty() && board[kingsquare-3].isEmpty()){
                     if((!isSquareUnderAttack(kingsquare-1)) && (!isSquareUnderAttack(kingsquare-2))){
-                        pseudolegalMoves.push_back(Move(kingsquare,kingsquare-2,false,false,false,false,true));
+                        pseudolegalMoves.push_back(Move(kingsquare,kingsquare-2,EMPTY,EMPTY,false,false,true));
                     }
                 }
             }
@@ -500,13 +499,13 @@ std::list<Move> Board::pseudoMoveGenerator(){
                     if(!board[target].isEmpty()){
                         //enemypiece:
                         if(!board[target].isColor(piece.getColor())){
-                            pseudolegalMoves.push_back(Move(square,target,EMPTY,true,false,false,false));
+                            pseudolegalMoves.push_back(Move(square,target,EMPTY,board[target].getType(),false,false,false));
                             break;
                         //friendly piece
                         }
                         break;
                     }else{//empty
-                        pseudolegalMoves.push_back(Move(square,target,EMPTY,false,false,false,false));
+                        pseudolegalMoves.push_back(Move(square,target,EMPTY,board[target].getType(),false,false,false));
                         target+=offset;
                         continue;
                     }
@@ -523,13 +522,13 @@ std::list<Move> Board::pseudoMoveGenerator(){
                     if(!board[target].isEmpty()){
                         //enemypiece:
                         if(!board[target].isColor(piece.getColor())){
-                            pseudolegalMoves.push_back(Move(square,target,EMPTY,true,false,false,false));
+                            pseudolegalMoves.push_back(Move(square,target,EMPTY,board[target].getType(),false,false,false));
                             break;
                         //friendly piece
                         }
                         break;
                     }else{//empty
-                        pseudolegalMoves.push_back(Move(square,target,EMPTY,false,false,false,false));
+                        pseudolegalMoves.push_back(Move(square,target,EMPTY,board[target].getType(),false,false,false));
                         target+=offset;
                         continue;
                     }
@@ -545,13 +544,13 @@ std::list<Move> Board::pseudoMoveGenerator(){
                     if(!board[target].isEmpty()){
                         //enemypiece:
                         if(!board[target].isColor(piece.getColor())){
-                            pseudolegalMoves.push_back(Move(square,target,EMPTY,true,false,false,false));
+                            pseudolegalMoves.push_back(Move(square,target,EMPTY,board[target].getType(),false,false,false));
                             break;
                         //friendly piece
                         }
                         break;
                     }else{//empty
-                        pseudolegalMoves.push_back(Move(square,target,EMPTY,false,false,false,false));
+                        pseudolegalMoves.push_back(Move(square,target,EMPTY,board[target].getType(),false,false,false));
                         target+=offset;
                         continue;
                     }
@@ -578,18 +577,20 @@ void Board::getLegalMoves(){
 }
 
 void Board::makeMove(Move m){
-    int piece_color = board[m.getTarget()].getColor();
 
     castle_LogBook.push_back(castle);
     move_LogBook.push_back(m);
     //making the move:
+    
     board[m.getTarget()] = board[m.getStart()];
+
     board[m.getStart()] = Piece();
 
     if(m.getPromotedPiece() != EMPTY){
         board[m.getTarget()] = Piece(m.getPromotedPiece() | ((iswhitetomove)? WHITEn: BLACKn));
     }
 
+    std::cout << "\n\nMove piece: " << m.getEnpassant() << "\n\n";
     //enpassant capture:
     if(m.getEnpassant() == true){
         int enemy_piece_pos = enpassantSquare + ((iswhitetomove)? -16 : 16);
@@ -633,11 +634,15 @@ void Board::unMakeMove(){
     board[lastmove.getTarget()] = Piece(EMPTY);
     //captured piece
     if(lastmove.getCapture() != EMPTY){
+        if (board[lastmove.getStart()].isType(PAWN));
         board[lastmove.getTarget()] = Piece(lastmove.getCapture() | ((iswhitetomove)? WHITEn: BLACKn));
     }
     //double pawnpush
     if(lastmove.getDoublePawnPush()){
         enpassantSquare = -1;
+    }
+    if(lastmove.getPromotedPiece() != EMPTY){
+        board[lastmove.getStart()] = Piece(PAWN | ((!iswhitetomove)? WHITEn: BLACKn));
     }
     //enpassant
     if(lastmove.getEnpassant()){
@@ -646,8 +651,6 @@ void Board::unMakeMove(){
         board[temp] = Piece(PAWN | ((iswhitetomove)? WHITEn: BLACKn));
     }
     //castling
-    std::cout << "\n\n\nkingsquare " << lastmove.getStart() << "\n\n\n";
-
     if(lastmove.getCastling()){
         int kingsquare = lastmove.getStart();
         bool isKingSide = (kingsquare - lastmove.getTarget() < 0);
