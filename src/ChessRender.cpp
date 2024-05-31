@@ -9,6 +9,8 @@ using std::cout;
 using std::list;
 
 namespace chess{
+
+  
 std::map<int, int> chessToRaylib = {
     {0, 7},
     {1, 6},
@@ -103,6 +105,7 @@ void ChessRenderer::renderPossibleDestinations(const int &from) const
     }
 }
 
+//
 void ChessRenderer::renderPiecesSquares() const{
     list<int> lista_ = board.getWhitePiecesSquares();
     for (auto square : lista_) {
@@ -117,6 +120,7 @@ void ChessRenderer::renderPiecesSquares() const{
         DrawRectangle(files * squaresize, ranks * squaresize, squaresize, squaresize, GREEN);
     }    
 }
+
 
 // Função principal de renderização do jogo
 void ChessRenderer::render()

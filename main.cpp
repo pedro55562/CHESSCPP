@@ -11,7 +11,7 @@
 
 
 void teste(){
-    std::string defaultFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    std::string defaultFen = "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1";
     chess::Board board;
     board.SetFen(defaultFen);
     board.getLegalMoves();
@@ -19,12 +19,12 @@ void teste(){
     chess::ChessRenderer grapghicboard = chess::ChessRenderer(board);
     while (grapghicboard.shouldClose() == false){
         
-        board.printBoard();  
-
-        if(board.getMoveMade()){
+        if(board.returnMoveMade()){
             board.getLegalMoves();
-            board.resetMoveMade();
+            board.setMoveMade();
         }
+
+        board.printBoard();  
 
 
         grapghicboard.render();
@@ -33,10 +33,14 @@ void teste(){
             break;
         if (k == -2){
             //unmake the last move
-            board.unMakeMove();
             continue;
         }
 
+        if(board.returnMoveMade()){
+            board.getLegalMoves();
+            board.setMoveMade();
+        }
+        
         grapghicboard.updateSelectedPiece(k);
         
         int k1 = grapghicboard.handleMouseInput();
@@ -44,7 +48,6 @@ void teste(){
             break;    
         if (k == -2){
             //unmake the last move
-            board.unMakeMove();
             continue;        
         }
 

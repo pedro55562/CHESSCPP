@@ -8,6 +8,7 @@
 
 #include "piece.hpp"
 #include "move.hpp"
+#include "castle.hpp"
 
 namespace chess
 { 
@@ -19,26 +20,24 @@ class Board
     private:
         std::vector<Piece> board;
 
+        // if the move was made
+        bool movemade;
+
         // list of pieces positions - you shoud use vector (32 elements)
         std::list<int> pieces;
         std::list<int> white_pieces;
         std::list<int> black_pieces;
 
-        // keep track of pseudo-legal moves( maybe from - to)
-        std::list<Move> pseudolegalMoves;
-
         // keep track of legal moves
         std::list<Move> legalMoves;
-
+        std::list<Move> move_LogBook;
         //king square
         int whiteking;
         int blacking;
 
         // castlings rights
-        bool whiteKingside;
-        bool whiteQueenside;
-        bool blackKingside;
-        bool blackQueenside;
+        Castle castle;
+        std::list<Castle> castle_LogBook;
 
         // is white to move
         bool iswhitetomove;
@@ -63,27 +62,29 @@ class Board
 
         int getBoardPosition(const std::string& s);
 
-        void pseudoMoveGenerator();
+        std::list<Move> pseudoMoveGenerator();
 
         Piece getPiece(const int& square){
             return this->board[square];
         }
 
-        std::list<int> getPossibleDestinations(int square){ 
-            std::list<int> temp;
-            for( Move m : pseudolegalMoves){
-                if (m.getStart() == square){
-                    temp.push_back(m.getTarget());
-                }
-            }
-            return temp;
-        }
+        std::list<int> getPossibleDestinations(int square);
 
         void getLegalMoves();
 
         void movePiece(int start, int target);
 
         void makeMove(Move m);
+
+        bool returnMoveMade();
+
+        void setMoveMade();
+
+        std::list<int> getWhitePiecesSquares();
+
+        std::list<int> getBlackPiecesSquares();
+
+        void updateCastlerights();
 };
 
 }

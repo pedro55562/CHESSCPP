@@ -280,12 +280,8 @@ chess::Board::Board()
 
     iswhitetomove = false;
 
-    whiteKingside = false;
-    whiteQueenside = false;
-    blackKingside = false;
-    blackQueenside = false;
-
     enpassantSquare = -1;
+    movemade = false;
 }
 
 chess::Board::~Board()
@@ -314,11 +310,11 @@ void Board::printBoard()
     std::cout << "Is white to move? "<< this->iswhitetomove << "\n";
     std::cout << "\nCastlings Rights:\n";
     std::cout << "\nFor white pieces:\n";
-    std::cout << "King side: " << this->whiteKingside << "\n";
-    std::cout << "Queen side: " << this->whiteQueenside << "\n";
+    std::cout << "King side: " << castle.getWhiteKingside() << "\n";
+    std::cout << "Queen side: " << castle.getWhiteQueenside() << "\n";
     std::cout << "\nFor black pieces:\n";
-    std::cout << "King side: " << this->blackKingside << "\n";
-    std::cout << "Queen side: " << this->blackQueenside << "\n";
+    std::cout << "King side: " << castle.getBlackKingside() << "\n";
+    std::cout << "Queen side: " << castle.getBlackQueenside() << "\n";
     
     //enpassant target square
     if( enpassantSquare != -1){
@@ -357,11 +353,7 @@ void Board::SetFen(const std::string &fen)
     // for the second section - iswhitetomove
     iswhitetomove = (sections[1] == "w");
 
-    // check castlings rights
-    whiteKingside = containsChar(sections[2], 'K');
-    whiteQueenside = containsChar(sections[2], 'Q');
-    blackKingside = containsChar(sections[2], 'k');
-    blackQueenside = containsChar(sections[2], 'q');
+    castle = Castle(containsChar(sections[2], 'K'), containsChar(sections[2], 'Q'), containsChar(sections[2], 'k'), containsChar(sections[2], 'q'));
 
     // enpassant targetsquare 
     if ( sections[3] != "-"){
@@ -384,10 +376,17 @@ int Board::getBoardPosition(const std::string &s){
     return (16*rank + file);
 }
 
-void Board::pseudoMoveGenerator(){
-    std::list<int>& myPieces = (iswhitetomove) ? white_pieces : black_pieces;
+std::list<Move> Board::pseudoMoveGenerator(){
+    std::list<Move> pseudolegalMoves;
+    for(int square = 0;square < 128;square++){
+        if((square&0x88)){
+            continue;
+        }
 
-    for(int square : myPieces){
+        if( board[square].getColor() != ((iswhitetomove)? WHITEn : BLACKn)){
+            continue;
+        }
+
         Piece piece = board[square];
         //Pawn moves
         if(piece.isType(PAWN)){
@@ -472,10 +471,10 @@ void Board::pseudoMoveGenerator(){
             }
             //Castling:
             int kingsquare = (iswhitetomove) ? 4: 116;
-            bool kingside   = (iswhitetomove) ? whiteKingside  : blackKingside;
-            bool queenside  = (iswhitetomove) ? whiteQueenside : blackQueenside;
+            bool kingside   = (iswhitetomove) ? castle.getWhiteKingside() : castle.getBlackKingside();
+            bool queenside  = (iswhitetomove) ? castle.getWhiteQueenside() : castle.getBlackQueenside();
             // if it's king side:
-            if(queenside){
+            if(kingside){
                 if(board[kingsquare+1].isEmpty() && board[kingsquare+2].isEmpty()){
                     if((!isSquareUnderAttack(kingsquare+1)) && (!isSquareUnderAttack(kingsquare+2))){
                         pseudolegalMoves.push_back(Move(kingsquare,kingsquare+2,false,false,false,false,true));
@@ -483,7 +482,7 @@ void Board::pseudoMoveGenerator(){
                 }
             }
             // if it's queen side:
-            if(kingside){
+            if(queenside){
                 if(board[kingsquare-1].isEmpty() && board[kingsquare-2].isEmpty() && board[kingsquare-3].isEmpty()){
                     if((!isSquareUnderAttack(kingsquare-1)) && (!isSquareUnderAttack(kingsquare-2))){
                         pseudolegalMoves.push_back(Move(kingsquare,kingsquare-2,false,false,false,false,true));
@@ -561,57 +560,107 @@ void Board::pseudoMoveGenerator(){
             }
         }
     }
+    return pseudolegalMoves;
+}
+
+std::list<int> Board::getPossibleDestinations(int square){ 
+    std::list<int> temp;
+    for( Move m : legalMoves){
+        if (m.getStart() == square){
+            temp.push_back(m.getTarget());
+        }
+    }
+    return temp;
 }
 
 void Board::getLegalMoves(){
-    //por agora:
-    legalMoves = pseudolegalMoves;
+    legalMoves = this->pseudoMoveGenerator();;
 }
 
 void Board::makeMove(Move m){
     int piece_color = board[m.getTarget()].getColor();
 
+    castle_LogBook.push_back(castle);
+    move_LogBook.push_back(m);
     //making the move:
     board[m.getTarget()] = board[m.getStart()];
     board[m.getStart()] = Piece();
 
-    //if the piece is a king
-    if(board[m.getTarget()].isType(KING)){
-        if (piece_color == WHITEn){
-            whiteking = m.getStart();
+    //enpassant capture:
+    if(m.getEnpassant() == true){
+        int enemy_piece_pos = enpassantSquare + ((iswhitetomove)? -16 : 16);
+        std::cout << "\n\nENPASSANT" << enemy_piece_pos << "\n\n";
+        board[enemy_piece_pos] = Piece();
+    }
+
+    //castling move:
+    if(m.getCastling()){
+        int kingsquare = (iswhitetomove) ? 4: 116;
+        bool isKingSide = (kingsquare - m.getTarget() < 0);
+        if(isKingSide){
+            board[kingsquare + 1] = board[kingsquare + 3];
+            board[kingsquare + 3] = Piece();
         }else{
-            blacking = m.getTarget();
+            board[kingsquare-1] = board[kingsquare -4];
+            board[kingsquare -4] = Piece();
         }
     }
 
-
     enpassantSquare = -1;
-    //if it's double pawn push
+    //if it's double pawn push:
     if(m.getDoublePawnPush()){
         enpassantSquare = m.getStart() + ((iswhitetomove) ? 16 : -16 );
     }
 
-    //if it's castling
+    updateCastlerights();
+    movemade = true;
+    iswhitetomove = !iswhitetomove;
+}
 
-    //if it's enpassant
+bool Board::returnMoveMade(){
+    return movemade;
+}
 
-    //dar update em lista de pieces
-    std::list<int>& mypieces = (iswhitetomove) ? white_pieces : black_pieces;
-    for(int& i : mypieces){
-        if(i == m.getStart()){
-            i = m.getTarget();
-        }
+void Board::setMoveMade(){
+    movemade = true;
+}
+
+std::list<int> Board::getWhitePiecesSquares()
+{
+    return white_pieces;
+}
+
+std::list<int> Board::getBlackPiecesSquares()
+{
+    return black_pieces;
+}
+
+void Board::updateCastlerights(){
+    bool whitekingside = castle.getWhiteKingside();
+    bool whitequeenside = castle.getWhiteQueenside();
+    bool blackkingside = castle.getBlackKingside();
+    bool blackqueenside = castle.getBlackQueenside();
+    if(!board[4].isPiece(KING | WHITEn)){
+        whitekingside = false;
+        whitequeenside = false;
     }
-    //if it's capture
-    if(m.getCapture()){
-        std::list<int>& enemy = (!iswhitetomove) ? white_pieces : black_pieces;
-        for(std::list<int>::iterator it = enemy.begin(); it != enemy.end(); ++it){ // removendo da lista e indo do comeco
-            if(*it == m.getTarget()){
-                enemy.erase(it);
-                break;
-            }
-        }
+    if(!board[116].isPiece(KING | BLACKn)){
+        blackkingside = false;
+        blackqueenside = false;
     }
+    if(!board[0].isPiece(ROOK | WHITEn)){
+        whitequeenside = false;
+    }
+    if(!board[7].isPiece(ROOK | WHITEn)){
+        whitekingside = false;
+    }
+    if(!board[112].isPiece(ROOK | BLACKn)){
+        blackqueenside = false;
+    }
+    if(!board[119].isPiece(ROOK | BLACKn)){
+        blackkingside = false;
+    }
+    castle = Castle(whitekingside,whitequeenside,blackkingside,blackqueenside);
 }
 
 void Board::movePiece(int start, int target){
@@ -631,4 +680,5 @@ void Board::movePiece(int start, int target){
     }
     return;
 }
+
 }
