@@ -268,6 +268,7 @@ void Board::printSquaresUnderAttack(){
 chess::Board::Board()
 {
     board.resize(128);
+    attackedSquares.resize(128);
     for(int square = 0; square < 128; square++){
         if ((square & 0x88)){
             // Out of the board
@@ -316,6 +317,9 @@ void Board::printBoard()
     std::cout << "King side: " << castle.getBlackKingside() << "\n";
     std::cout << "Queen side: " << castle.getBlackQueenside() << "\n";
     
+    //king posiions
+    std::cout << "\n\nWhite king: " << whiteking << "\n";
+    std::cout << "Black king: " << blacking << "\n\n";
     //enpassant target square
     if( enpassantSquare != -1){
         std::cout << "\n\nEnpassant position: "<< colsTOfiles[enpassantSquare & 7] << rowsTOranks[enpassantSquare >> 4] << "\n";
@@ -345,6 +349,10 @@ void Board::SetFen(const std::string &fen)
                 this->board[16*rank + file] =  Piece(pieceType, piececolor);
                 pieces.push_back(16*rank + file);
                 (piececolor == WHITEn) ? white_pieces.push_back(16*rank + file) : black_pieces.push_back(16*rank + file);
+                if(pieceType == KING){
+                    int& king = ((piececolor == WHITEn)? whiteking: blacking);
+                    king = 16*rank + file;
+                }
                 file++;
             }
 
@@ -616,6 +624,11 @@ void Board::makeMove(Move m){
         enpassantSquare = m.getStart() + ((iswhitetomove) ? 16 : -16 );
     }
 
+    if(board[m.getTarget()].getType() == KING){
+        int& king = ((board[m.getTarget()].getColor() == WHITEn)? whiteking: blacking);
+        king = m.getTarget();
+    }
+
     updateCastlerights();
     movemade = true;
     iswhitetomove = !iswhitetomove;
@@ -662,6 +675,10 @@ void Board::unMakeMove(){
             board[kingsquare - 1] = Piece();
         }
     }    
+    if(board[lastmove.getStart()].getType() == KING){
+        int& king = ((board[lastmove.getStart()].getColor() == WHITEn)? whiteking: blacking);
+        king = lastmove.getStart();
+    }
 
     movemade = true;
     iswhitetomove = !iswhitetomove;

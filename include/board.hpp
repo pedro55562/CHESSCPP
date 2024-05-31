@@ -30,6 +30,9 @@ class Board
 
         // keep track of legal moves
         std::list<Move> legalMoves;
+
+        std::vector<bool> attackedSquares;
+
         std::list<Move> move_LogBook;
         //king square
         int whiteking;
