@@ -586,10 +586,13 @@ void Board::makeMove(Move m){
     board[m.getTarget()] = board[m.getStart()];
     board[m.getStart()] = Piece();
 
+    if(m.getPromotedPiece() != EMPTY){
+        board[m.getTarget()] = Piece(m.getPromotedPiece() | ((iswhitetomove)? WHITEn: BLACKn));
+    }
+
     //enpassant capture:
     if(m.getEnpassant() == true){
         int enemy_piece_pos = enpassantSquare + ((iswhitetomove)? -16 : 16);
-        std::cout << "\n\nENPASSANT" << enemy_piece_pos << "\n\n";
         board[enemy_piece_pos] = Piece();
     }
 
@@ -613,6 +616,50 @@ void Board::makeMove(Move m){
     }
 
     updateCastlerights();
+    movemade = true;
+    iswhitetomove = !iswhitetomove;
+}
+
+void Board::unMakeMove(){
+    if(move_LogBook.size() == 0){
+        return;
+    }
+    Move lastmove = move_LogBook.back();
+    move_LogBook.pop_back();
+    castle = castle_LogBook.back();
+    castle_LogBook.pop_back();
+
+    board[lastmove.getStart()] = board[lastmove.getTarget()];
+    board[lastmove.getTarget()] = Piece(EMPTY);
+    //captured piece
+    if(lastmove.getCapture() != EMPTY){
+        board[lastmove.getTarget()] = Piece(lastmove.getCapture() | ((iswhitetomove)? WHITEn: BLACKn));
+    }
+    //double pawnpush
+    if(lastmove.getDoublePawnPush()){
+        enpassantSquare = -1;
+    }
+    //enpassant
+    if(lastmove.getEnpassant()){
+        enpassantSquare = lastmove.getTarget();
+        int temp = lastmove.getTarget() + ((iswhitetomove) ? 16 : -16 );
+        board[temp] = Piece(PAWN | ((iswhitetomove)? WHITEn: BLACKn));
+    }
+    //castling
+    std::cout << "\n\n\nkingsquare " << lastmove.getStart() << "\n\n\n";
+
+    if(lastmove.getCastling()){
+        int kingsquare = lastmove.getStart();
+        bool isKingSide = (kingsquare - lastmove.getTarget() < 0);
+        if(isKingSide){
+            board[kingsquare + 3] = board[kingsquare + 1];
+            board[kingsquare + 1] = Piece();
+        }else{
+            board[kingsquare - 4] = board[kingsquare - 1];
+            board[kingsquare - 1] = Piece();
+        }
+    }    
+
     movemade = true;
     iswhitetomove = !iswhitetomove;
 }

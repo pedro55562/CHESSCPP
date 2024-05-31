@@ -11,7 +11,7 @@
 
 
 void teste(){
-    std::string defaultFen = "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1";
+    std::string defaultFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     chess::Board board;
     board.SetFen(defaultFen);
     board.getLegalMoves();
@@ -32,7 +32,7 @@ void teste(){
         if (k == -1)
             break;
         if (k == -2){
-            //unmake the last move
+            board.unMakeMove();
             continue;
         }
 
@@ -47,7 +47,7 @@ void teste(){
         if (k1 == -1)
             break;    
         if (k == -2){
-            //unmake the last move
+            board.unMakeMove();
             continue;        
         }
 

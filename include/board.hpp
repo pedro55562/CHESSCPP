@@ -76,6 +76,8 @@ class Board
 
         void makeMove(Move m);
 
+        void unMakeMove();
+
         bool returnMoveMade();
 
         void setMoveMade();
