@@ -208,7 +208,6 @@ bool ChessRenderer::shouldClose() const
 // Lida com a entrada do mouse para obter a posição de clique
 int ChessRenderer::handleMouseInput()
 {
-  int aux = 0;
   bool click = false;
 
   // Loop até que ocorra um clique ou a janela seja fechada

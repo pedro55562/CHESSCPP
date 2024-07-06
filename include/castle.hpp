@@ -6,10 +6,10 @@
 
 /*
     Enconding:
-        whiteKingside   0001 
-        whiteQueenside  0010 << 1 
-        blackKingside   0100 << 2
-        blackQueenside  1000 << 3
+        whiteKingside   0000 0001 << 0
+        whiteQueenside  0000 0010 << 1 
+        blackKingside   0000 0100 << 2
+        blackQueenside  0000 1000 << 3
 
     
 
